@@ -1,3 +1,15 @@
+시작할때
+
+redis-server
+
+cd frontend
+npm run dev
+
+cd backend/express
+node app.js
+
+cd backend/weather_data
+python3 main.py
 
 
 frontend
