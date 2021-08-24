@@ -1,0 +1,13 @@
+
+
+frontend
+vue
+
+---------
+backend
+
+python3
+python-pip
+nodejs
+npm
+redis-server
