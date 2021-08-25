@@ -1,48 +1,33 @@
 import urllib.parse, urllib.request
 from bs4 import BeautifulSoup
-import datetime, time
 import redis
+import time
+from date import getTimeNow
 
-def getTimeNow():
+def getCityKor(city):
     '''
-    현재 시간을 dict 형으로 반환
-    ['year'] = 년, ['month'] = 월, ['day'] = 일, ['hour'] = 시 
+    도시 명을 입력 받아 한글로 반환
     '''
-
-    dt = datetime.datetime.now()
-    if(dt.month < 10): month = '0'+str(dt.month)
-    else: month = dt.month
-    if(dt.day < 10): day = '0'+str(dt.day)
-    else: day = dt.day
-    if(dt.hour < 10): hour = '0'+str(dt.hour)
-    else: hour = dt.hour
-
-    time = {
-        'year': dt.year,
-        'month': month,
-        'day': day,
-        'hour': hour
+    cities_kor = {
+        'seoul': '서울',
+        'gangneung': '강릉',
+        'daejeon': '대전',
+        'daegu': '대구',
+        'busan': '부산',
+        'jeonju': '전주',
+        'gwangju': '광주',
+        'jeju': '제주'
     }
+    return cities_kor[city]
 
-    return time
-
-#weather_table > tbody > tr:nth-child(31) > td:nth-child(5)
-
-def getCityCode(city):
+def getCityCode(city, soup):
     '''
-    도시 명을 입력 받아 해당 도시 index를 반환
+    도시 명과 HTML을 입력 받아 해당 도시 index를 반환
     '''
-    code = {
-        'seoul': '41',
-        'gangneung': '1',
-        'daejeon': '20',
-        'daegu': '19',
-        'busan': '31',
-        'jeonju': '70',
-        'gwangju': '11',
-        'jeju': '73'
-    }
-    return code[city]
+    for i in range (1,96):
+        temp = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(1) > a'.format(i)).text
+        if(temp == getCityKor(city)):
+            return i
 
 def setWeatherNow():
     '''
@@ -58,15 +43,15 @@ def setWeatherNow():
         soup = BeautifulSoup(html, 'html.parser')
 
         for i in cities:
-            index_city = getCityCode(i)
+            index_city = getCityCode(i,soup)
             weather = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(2)'.format(index_city)).text
-            visibilty = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(3)'.format(index_city)).text
+            visibility = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(3)'.format(index_city)).text
             cloud = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(4)'.format(index_city)).text
             cloud_low = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(5)'.format(index_city)).text
             temp = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(6)'.format(index_city)).text
 
             rd.set('now_{}_weather'.format(i),weather)
-            rd.set('now_{}_visibilty'.format(i),visibilty)
+            rd.set('now_{}_visibility'.format(i),visibility)
             rd.set('now_{}_cloud'.format(i),cloud)
             rd.set('now_{}_cloud_low'.format(i),cloud_low)
             rd.set('now_{}_temp'.format(i),temp)
@@ -80,14 +65,15 @@ def setWeatherNow():
         for i in cities:
             index_city = getCityCode(i)
             weather = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(2)'.format(index_city)).text
-            visibilty = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(3)'.format(index_city)).text
+            visibility = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(3)'.format(index_city)).text
             cloud = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(4)'.format(index_city)).text
             cloud_low = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(5)'.format(index_city)).text
             temp = soup.select_one('#weather_table > tbody > tr:nth-child({}) > td:nth-child(6)'.format(index_city)).text
 
             rd.set('now_{}_weather'.format(i),weather)
-            rd.set('now_{}_visibilty'.format(i),visibilty)
+            rd.set('now_{}_visibility'.format(i),visibility)
             rd.set('now_{}_cloud'.format(i),cloud)
             rd.set('now_{}_cloud_low'.format(i),cloud_low)
             rd.set('now_{}_temp'.format(i),temp)
 
+setWeatherNow()
